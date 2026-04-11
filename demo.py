@@ -1,4 +1,4 @@
-from datatypes import Color, Screen, Scene
+from datatypes import *
 from viewer import show_result
 from renderer import render_onto_screen
 
@@ -18,7 +18,17 @@ def main():
     screen = make_empty_screen(screen_dim)
 
     scene = Scene(
-        triangles = tuple()
+        triangles = (
+            Triangle(
+                vertices = (
+                    # △
+                    (0.5, 1., 1.),
+                    (0., 0., 1.),
+                    (1., 0., 1.)
+                ),
+                color = (1., 0., 0.)  # red
+            ),
+        )
     )
 
     render_onto_screen(screen, screen_dim, scene)

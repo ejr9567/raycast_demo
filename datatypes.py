@@ -21,3 +21,11 @@ class Triangle:
 @dataclass
 class Scene:
     triangles: tuple[Triangle]
+
+@dataclass
+class Ray:
+    origin: Vec3
+
+    # displacement from origin
+    # (relative coordinate to origin)
+    direction: Vec3
