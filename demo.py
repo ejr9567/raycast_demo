@@ -13,7 +13,7 @@ def make_empty_screen(dim: int) -> Screen:
 
 
 def main():
-    screen_dim = 20
+    screen_dim = 3
 
     screen = make_empty_screen(screen_dim)
 
@@ -22,13 +22,14 @@ def main():
             Triangle(
                 vertices = (
                     # △
+                    (0., 0., 0.75),
                     (0.5, 1., 1.),
-                    (0., 0., 1.),
-                    (1., 0., 1.)
+                    (1., 0., 1.25)
                 ),
                 color = (1., 0., 0.)  # red
             ),
-        )
+        ),
+        light = (0.5, 0.5, 0.5)
     )
 
     render_onto_screen(screen, screen_dim, scene)
