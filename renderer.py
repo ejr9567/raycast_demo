@@ -1,5 +1,6 @@
 from datatypes import *
 from dataclasses import dataclass
+import sys
 
 
 def screen_space_to_world_space(screen_x, screen_y, screen_dim) -> Vec3:
@@ -106,7 +107,7 @@ def collision_between_ray_and_triangle_moller(ray: Ray, triangle: Triangle) -> C
 
     # We hit! Build real collision point using r(t) = O + tD
 
-    collision_coordinates = Vec3_add(Vec3_scale(ray.origin, t), ray.direction)
+    collision_coordinates = Vec3_add(Vec3_scale(ray.direction, t), ray.origin)
 
     return CollisionResult(
         triangle=triangle,
@@ -116,7 +117,7 @@ def collision_between_ray_and_triangle_moller(ray: Ray, triangle: Triangle) -> C
     )
 
 
-def perform_raycast(ray: Ray, triangles: tuple[Triangle]) -> CollisionResult | None:
+def perform_raycast(ray: Ray, triangles: list[Triangle]) -> CollisionResult | None:
     min_hit: CollisionResult | None = None
 
     for triangle in triangles:
@@ -139,10 +140,13 @@ def render_onto_screen(
 
     scene: Scene
 ):
-    background_color = (0., 0., 0.)
-
     for y in range(dim):
         for x in range(dim):
+            if x == 0:
+                percent = ((y * dim + x) / (dim * dim)) * 100.
+                print(f"\r                  \r{percent}%  ({x},{y})", end="")
+                sys.stdout.flush()
+
             world_coords = screen_space_to_world_space(x, y, dim)
 
             # print(f"({x}, {y}) = {world_coords}")
@@ -154,17 +158,60 @@ def render_onto_screen(
 
             raycast_result = perform_raycast(ray, scene.triangles)
             if raycast_result is None:
-                color = background_color
+                color = scene.background_color
             else:
+
                 triangle = raycast_result.triangle
                 hit_point = raycast_result.collision_point
+                base_color = raycast_result.triangle.color
 
-                # Ambient
-                color = raycast_result.triangle.color
+                # ================= Ambient =================
 
-                # Diffuse
-                # take dot product between
-                normal_ray = triangle.normal_at_point(hit_point)
-                print(f"({x}, {y}) = {normal_ray}")
+                ambient_constant = 0.2 # ka
+
+                # ================= Diffuse =================
+
+                # Need to get Lm (direction vector from surface collision point to light point)
+                light_direction = Vec3_sub(scene.light, hit_point)
+
+                # Normalize Lm
+                light_direction = Vec3_norm(light_direction)
+
+                # Ray from hit point normal to triangle surface (pre-normalized)
+                # Get vector (N)
+                normal_vector = triangle.normal()
+
+                # Get dot product between N and Lm
+                n_l_dot_prod = Vec3_dot(normal_vector, light_direction)
+
+                # Clamp
+                if n_l_dot_prod < 0.0:
+                    n_l_dot_prod = 0.0
+
+                # Diffuse constant (kd)
+                diffuse_constant = 1.0
+
+                #  ================= Phong Equation =================
+
+                # How much the material itself responds to light
+                k_a = ambient_constant
+
+                # How much diffuse reflection the material has
+                k_d = diffuse_constant
+
+                # Ambient light intensity
+                i_a = 1.0
+
+                # Light source intensity
+                i_d = 1.0
+
+                illumination = i_a * k_a + i_d * n_l_dot_prod * k_d
+
+                # Clamp illumination, shouldn't be higher than 1
+                if illumination > 1.0:
+                    illumination = 1.0
+
+                # Final color
+                color = Vec3_scale(base_color, illumination)
 
             screen[y][x] = color

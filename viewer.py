@@ -1,4 +1,4 @@
-from datatypes import Color, Screen
+from datatypes import *
 
 
 def show_result(
@@ -12,7 +12,9 @@ def show_result(
 
     # Number of pixels' worth of space
     # as a boundary on each side of the image
-    pad: int
+    pad: int,
+
+    debug: bool = True
 ):
     import tkinter
 
@@ -54,9 +56,6 @@ def show_result(
             canvas_dim - pad_amt_one_side - (y * scale) - scale
         )
 
-    def invert_color(color: Color) -> Color:
-        return 1. - color[0], 1. - color[1], 1. - color[2]
-
     # Grayscale rendering
     # 128 -> 80
     def color_component_to_tkinter_color_two_hex_char(color: float) -> str:
@@ -79,7 +78,11 @@ def show_result(
 
         return screen_color
 
-    canvas = tkinter.Canvas(toplevel, width = canvas_dim, height = canvas_dim, bg = bg)
+    canvas = tkinter.Canvas(
+        toplevel, width = canvas_dim, height = canvas_dim, bg = bg,
+        relief = "solid",
+        bd = 0
+    )
     canvas.pack(padx = 0, pady = 0)
 
     # draw screen pixels on the canvas
@@ -89,24 +92,32 @@ def show_result(
             pixel_color = color_amt_to_tkinter_color(screen_color_flt)
 
             canvas_x, canvas_y = screen_to_canvas_coord(screen_x, screen_y)
+            kwargs = {
+                "fill": pixel_color
+            }
+            if debug:
+                kwargs["outline"] = fg
+            else:
+                kwargs["outline"] = ""
             canvas.create_rectangle(
                 canvas_x, canvas_y, canvas_x + scale, canvas_y + scale,
-                fill = pixel_color, outline = fg
+                **kwargs
             )
 
-    # draw overlay displaying coordinates of each pixel
-    for screen_y in range(screen_dim):
-        for screen_x in range(screen_dim):
-            canvas_x, canvas_y = screen_to_canvas_coord(screen_x, screen_y)
+    if debug:
+        # draw overlay displaying coordinates of each pixel
+        for screen_y in range(screen_dim):
+            for screen_x in range(screen_dim):
+                canvas_x, canvas_y = screen_to_canvas_coord(screen_x, screen_y)
 
-            screen_color_flt = screen[screen_y][screen_x]
-            overlay_color = color_amt_to_tkinter_color(invert_color(screen_color_flt))
+                screen_color_flt = screen[screen_y][screen_x]
+                overlay_color = color_amt_to_tkinter_color(invert_color(screen_color_flt))
 
-            canvas.create_text(
-                canvas_x + (scale / 2), canvas_y + (scale / 2),
-                text = f"({screen_x},{screen_y})",
-                fill = overlay_color,
-                font = font
-            )
+                canvas.create_text(
+                    canvas_x + (scale / 2), canvas_y + (scale / 2),
+                    text = f"({screen_x},{screen_y})",
+                    fill = overlay_color,
+                    font = font
+                )
 
     toplevel.mainloop()

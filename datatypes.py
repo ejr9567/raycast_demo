@@ -5,6 +5,10 @@ import math
 # R, G, B values (0. = not present, 1. = completely present)
 Color = tuple[float, float, float]
 
+def invert_color(color: Color) -> Color:
+    return 1. - color[0], 1. - color[1], 1. - color[2]
+
+
 # List of pixel rows
 Screen = list[list[Color]]
 
@@ -56,10 +60,9 @@ class Triangle:
     vertices: tuple[Vertex, Vertex, Vertex]
     color: Color
 
-    def normal_at_point(self, point: Vec3) -> Ray:
+    def normal(self) -> Vec3:
         """
-        Find normal ray from triangle surface
-        given point on triangle (in world coordinates).
+        Find normal vector from triangle surface.
         """
         # Direction is cross product
         # between two edges
@@ -71,13 +74,12 @@ class Triangle:
 
         normalized_direction = Vec3_norm(direction)
 
-        return Ray(
-            origin = point,
-            direction = normalized_direction
-        )
+        return normalized_direction
 
 
 @dataclass
 class Scene:
-    triangles: tuple[Triangle]
+    triangles: list[Triangle]
     light: Vec3
+
+    background_color: Color
