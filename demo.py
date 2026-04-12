@@ -138,9 +138,11 @@ def main():
     render_onto_screen(screen, screen_dim, scene)
     print("Rendered, saving...")
 
-    write_image_file(screen, screen_dim, "result.png")
+    out_filename = "result.png"
 
-    print("Showing in window...")
+    write_image_file(screen, screen_dim, out_filename)
+
+    print(f"Saved as {out_filename}! Showing in window...")
 
     show_result(
         screen,
