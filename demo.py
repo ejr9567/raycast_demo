@@ -134,6 +134,10 @@ def main():
         background_color =  (1., 1., 1.)  # white
     )
 
+    print("### START CPP DECLARATION ###")
+    print(scene.cpp_declaration, end="")
+    print("### END CPP DECLARATION ###")
+
     print("Rendering...")
     render_onto_screen(screen, screen_dim, scene)
     print("Rendered, saving...")

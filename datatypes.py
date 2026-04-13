@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import math
+from datetime import datetime
 
 
 # R, G, B values (0. = not present, 1. = completely present)
@@ -7,6 +8,9 @@ Color = tuple[float, float, float]
 
 def invert_color(color: Color) -> Color:
     return 1. - color[0], 1. - color[1], 1. - color[2]
+
+def Color_cpp_declaration(color: Color) -> str:
+    return f"Color({color[0]}f, {color[1]}f, {color[2]}f)"
 
 
 # List of pixel rows
@@ -43,6 +47,9 @@ def Vec3_mag(v: Vec3) -> float:
 def Vec3_norm(v: Vec3) -> Vec3:
     return Vec3_scale(v, 1. / Vec3_mag(v))
 
+def Vec3_cpp_declaration(v: Vec3) -> str:
+    return f"Vec3({v[0]}f, {v[1]}f, {v[2]}f)"
+
 
 # Position of vertex (x, y, z)
 Vertex = Vec3
@@ -76,6 +83,19 @@ class Triangle:
 
         return normalized_direction
 
+    @property
+    def cpp_declaration(self) -> str:
+        v1, v2, v3 = self.vertices
+
+        return (
+            "Triangle("
+                f"{Vec3_cpp_declaration(v1)}, "
+                f"{Vec3_cpp_declaration(v2)}, "
+                f"{Vec3_cpp_declaration(v3)}, "
+                f"{Color_cpp_declaration(self.color)}"
+            ")"
+        )
+
 
 @dataclass
 class Scene:
@@ -83,3 +103,32 @@ class Scene:
     light: Vec3
 
     background_color: Color
+
+    @property
+    def cpp_declaration(self) -> str:
+        time_fmt = "%d/%m/%Y, %I:%M:%S %p"
+        decl = f"// Scene data export from {datetime.now().strftime(time_fmt)}\n"
+        decl += f"\n"
+
+        decl += f"#include \"common.hpp\"\n"
+        decl += "\n"
+        decl += "\n"
+
+        decl += f"extern const size_t num_triangles = {len(self.triangles)};\n"
+        decl += f"extern Triangle scene_data_arr[num_triangles] = {{\n"
+        for n, triangle in enumerate(self.triangles):
+            decl += f"    {triangle.cpp_declaration}"
+            if n != len(self.triangles) - 1:
+                decl += ","
+            decl += "\n"
+        decl += f"}};\n"
+        decl += f"extern Triangle* scene_data = scene_data_arr;\n"
+
+        decl += f"extern Vec3 light_pos = {Vec3_cpp_declaration(self.light)};\n"
+
+        decl += (
+            f"extern Color background_color"
+               f" = {Color_cpp_declaration(self.background_color)};\n"
+        )
+
+        return decl
