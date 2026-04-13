@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import math
 from datetime import datetime
+from pathlib import Path
+from file_io import _write_uint64be, _write_floatbe
 
 
 # R, G, B values (0. = not present, 1. = completely present)
@@ -10,7 +12,7 @@ def invert_color(color: Color) -> Color:
     return 1. - color[0], 1. - color[1], 1. - color[2]
 
 def Color_cpp_declaration(color: Color) -> str:
-    return f"Color({color[0]}f, {color[1]}f, {color[2]}f)"
+    return f"Color((float) {color[0]:E}, (float) {color[1]:E}, (float) {color[2]:E})"
 
 
 # List of pixel rows
@@ -48,7 +50,7 @@ def Vec3_norm(v: Vec3) -> Vec3:
     return Vec3_scale(v, 1. / Vec3_mag(v))
 
 def Vec3_cpp_declaration(v: Vec3) -> str:
-    return f"Vec3({v[0]}f, {v[1]}f, {v[2]}f)"
+    return f"Vec3((float) {v[0]:E}, (float) {v[1]:E}, (float) {v[2]:E})"
 
 
 # Position of vertex (x, y, z)
@@ -99,6 +101,8 @@ class Triangle:
 
 @dataclass
 class Scene:
+    name: str
+
     triangles: list[Triangle]
     light: Vec3
 
@@ -107,7 +111,7 @@ class Scene:
     @property
     def cpp_declaration(self) -> str:
         time_fmt = "%m/%d/%Y, %I:%M:%S %p"
-        decl = f"// Scene data export from {datetime.now().strftime(time_fmt)}\n"
+        decl = f"// Scene data export for '{self.name}' from {datetime.now().strftime(time_fmt)}\n"
         decl += f"\n"
 
         decl += f"#include \"common.hpp\"\n"
@@ -132,3 +136,34 @@ class Scene:
         )
 
         return decl
+
+    def write_to_file(self, file_path: Path):
+        with file_path.open("wb") as file:
+            bg_r, bg_g, bg_b = self.background_color
+
+            _write_floatbe(bg_r, file)
+            _write_floatbe(bg_g, file)
+            _write_floatbe(bg_b, file)
+
+            l_x, l_y, l_z = self.light
+
+            _write_floatbe(l_x, file)
+            _write_floatbe(l_y, file)
+            _write_floatbe(l_z, file)
+
+            num_triangles = len(self.triangles)
+            _write_uint64be(num_triangles, file)
+
+            for triangle in self.triangles:
+                for vertex in triangle.vertices:
+                    v_x, v_y, v_z = vertex
+
+                    _write_floatbe(v_x, file)
+                    _write_floatbe(v_y, file)
+                    _write_floatbe(v_z, file)
+
+                c_r, c_g, c_b = triangle.color
+
+                _write_floatbe(c_r, file)
+                _write_floatbe(c_g, file)
+                _write_floatbe(c_b, file)

@@ -2,27 +2,7 @@ from datatypes import *
 from write_image_file import write_image_file
 
 from pathlib import Path
-from struct import unpack
-
-
-def _read_uint64be(file) -> int:
-    raw = file.read(8)
-    assert len(raw) == 8
-    return int.from_bytes(
-        raw,
-        byteorder = "big",
-        signed = False
-    )
-
-def _read_floatbe(file) -> float:
-    raw = file.read(4)
-    assert len(raw) == 4
-
-    return unpack(
-        ">f",  # one item in buffer:
-                      # big-endian float
-        raw
-    )[0]  # first unpacked item
+from file_io import _read_uint64be, _read_floatbe
 
 def write_cpp_project_output_as_png(
     in_filename: str,

@@ -206,3 +206,48 @@ def stringify_triangle_data(triangles: list[Triangle]) -> str:
             f"),\n"
         )
     return s
+
+
+def load_obj_file(file_path: str, color: Color) -> list[Triangle]:
+    vertices: list[Vec3] = []
+    triangles: list[Triangle] = []
+
+    with open(file_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            parts = line.split()
+
+            if not parts:
+                continue
+
+            # vertices
+            if parts[0] == "v":
+                assert len(parts) == 4
+                x = float(parts[1])
+                y = float(parts[2])
+                z = float(parts[3])
+                vertices.append((x, y, z))
+
+            # faces
+            elif parts[0] == "f":
+                indices = []
+
+                if len(parts) != 4:
+                    # ignore ill-formed (untriangulated?) face
+                    continue
+
+                for p in parts[1:]:
+                    vertex_index = int(p.split("/")[0]) - 1 # 1 -indexed
+                    indices.append(vertex_index)
+
+                triangles.append(Triangle(
+                    vertices=(
+                        vertices[indices[0]],
+                        vertices[indices[1]],
+                        vertices[indices[2]]
+
+                    ),
+                    color=color
+                ))
+
+    return triangles
