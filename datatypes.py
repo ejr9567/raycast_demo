@@ -106,7 +106,7 @@ class Scene:
 
     @property
     def cpp_declaration(self) -> str:
-        time_fmt = "%d/%m/%Y, %I:%M:%S %p"
+        time_fmt = "%m/%d/%Y, %I:%M:%S %p"
         decl = f"// Scene data export from {datetime.now().strftime(time_fmt)}\n"
         decl += f"\n"
 
