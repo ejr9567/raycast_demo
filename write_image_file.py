@@ -4,9 +4,9 @@ from PIL import Image
 
 def _color_to_rgb8(color: Color) -> tuple[int, int, int]:
     return (
-        int(color[0] * 255),
-        int(color[1] * 255),
-        int(color[2] * 255)
+        int(max(0., min(color[0] * 255, 255.))),
+        int(max(0., min(color[1] * 255, 255.))),
+        int(max(0., min(color[2] * 255, 255.)))
     )
 
 def write_image_file(
@@ -22,6 +22,10 @@ def write_image_file(
 
     for y in range(dim):
         for x in range(dim):
-            img.putpixel((x, dim - 1 - y), _color_to_rgb8(screen[y][x]))
+            try:
+                img.putpixel((x, dim - 1 - y), _color_to_rgb8(screen[y][x]))
+            except:
+                print(x, y, screen[y][x])
+                raise
 
     img.save(out_filename)
